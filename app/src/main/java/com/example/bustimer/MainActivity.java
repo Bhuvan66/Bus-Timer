@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-ArrayList<String> tableNames, busNames, arrivalTimes, types;
+ArrayList<String> tableNames, busNames, arrivalTimes, types, tos;
 RecyclerView recyclerView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +33,12 @@ RecyclerView recyclerView;
         Locations locations = Locations.getInstance(this);
         CustomAdapter customAdapter;
 
+
         //initialze arraylits
         busNames = new ArrayList<>();
         arrivalTimes = new ArrayList<>();
         types = new ArrayList<>();
+        tos = new ArrayList<>();
         recyclerView = findViewById(R.id.RecycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
@@ -49,31 +51,38 @@ RecyclerView recyclerView;
             }
         });
         tableNames = locations.getAllStops();
+        if (tableNames.isEmpty()) {
+            // Create tables and add dummy data
+            locations.CreateStopTable("karkala");
+            tableNames = locations.getAllStops();
+        }
         //display all data with table name
         for (String tableName : tableNames) {
             busNames.add("Table: " + tableName);
             arrivalTimes.add("");
             types.add("");
+            tos.add("");
             //fetch data from table
             //display data in recycler view
             Cursor cursor = locations.getBuses(tableName);
-            if (cursor.moveToFirst()) {
-                while (!cursor.isAfterLast()) {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
                     int busNameIndex = cursor.getColumnIndex("bus_name");
                     int arrivalTimeIndex = cursor.getColumnIndex("arrival_time");
                     int typeIndex = cursor.getColumnIndex("type");
+                    int toIndex = cursor.getColumnIndex("to");
 
-                    if (busNameIndex != -1 && arrivalTimeIndex != -1 && typeIndex != -1) {
+                    if (busNameIndex != -1 && arrivalTimeIndex != -1 && typeIndex != -1 && toIndex != -1) {
                         busNames.add(cursor.getString(busNameIndex));
                         arrivalTimes.add(cursor.getString(arrivalTimeIndex));
                         types.add(cursor.getString(typeIndex));
+                        tos.add(cursor.getString(toIndex));
                     }
-                    cursor.moveToNext();
-                }
+                } while (cursor.moveToNext());
             }
         }
 
-        customAdapter = new CustomAdapter(this, busNames, arrivalTimes, types);
+        customAdapter = new CustomAdapter(this, busNames, arrivalTimes, types, tos);
         recyclerView.setAdapter(customAdapter);
 
     }

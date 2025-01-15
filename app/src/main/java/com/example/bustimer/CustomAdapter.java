@@ -13,14 +13,15 @@ import java.util.ArrayList;
 
 public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.MyViewHolder> {
     private Context context;
-    private ArrayList<String> busNames, arrivalTimes, types;
+    private ArrayList<String> busNames, arrivalTimes, types, tos;
 
 
-    public CustomAdapter(Context context, ArrayList<String> busNames, ArrayList<String> arrivalTimes, ArrayList<String> types) {
+    public CustomAdapter(Context context, ArrayList<String> busNames, ArrayList<String> arrivalTimes, ArrayList<String> types, ArrayList<String> tos) {
         this.context = context;
         this.busNames = busNames;
         this.arrivalTimes = arrivalTimes;
         this.types = types;
+        this.tos = tos;
     }
     @NonNull
     @Override
@@ -35,6 +36,7 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.MyViewHold
         holder.busName.setText(busNames.get(position));
         holder.arrivalTime.setText(arrivalTimes.get(position));
         holder.type.setText(types.get(position));
+        holder.to.setText(tos.get(position));
     }
 
     @Override
@@ -43,12 +45,13 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.MyViewHold
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView busName, arrivalTime, type;
+        TextView busName, arrivalTime, type, to;
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             busName = itemView.findViewById(R.id.textView);
             arrivalTime = itemView.findViewById(R.id.textView2);
             type = itemView.findViewById(R.id.textView3);
+            to = itemView.findViewById(R.id.textView6);
         }
     }
 }

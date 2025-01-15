@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,28 +36,39 @@ public class Locations extends SQLiteOpenHelper {
 
     public boolean CreateStopTable(String Place) {
         SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?", new String[]{Place});
+        boolean tableExists = cursor.getCount() > 0;
+        cursor.close();
+
+        if (tableExists) {
+            return false; // Table already exists
+        }
+
         try {
             db.execSQL("CREATE TABLE " + Place + " (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "bus_name TEXT, " +
                     "arrival_time TEXT, " +
-                    "type TEXT)");
+                    "type TEXT, " +
+                    "`to` TEXT)");
 
 
-            //add 5 dummy rows for testing
-            addBus(Place, "Bus 1", "10:00", "AC");
-            addBus(Place, "Bus 2", "10:30", "Non-AC");
-            addBus(Place, "Bus 3", "11:00", "AC");
-            addBus(Place, "Bus 4", "11:30", "Non-AC");
+            // Add 5 dummy rows for testing
+            addBus(Place, "Bus 1", "10:00", "AC", "To");
+            addBus(Place, "Bus 2", "10:30", "Non-AC", "To");
+            addBus(Place, "Bus 3", "11:00", "AC", "To");
+            addBus(Place, "Bus 4", "11:30", "Non-AC", "To");
+
             return true;
         } catch (Exception e) {
+
             return false;
         }
     }
 
-    public void addBus(String Place, String bus_name, String arrival_time, String type) {
+    public void addBus(String Place, String bus_name, String arrival_time, String type, String to) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("INSERT INTO " + Place + " (bus_name, arrival_time, type) VALUES ('" + bus_name + "', '" + arrival_time + "', '" + type + "')");
+        db.execSQL("INSERT INTO " + Place + " (bus_name, arrival_time, type, `to`) VALUES ('" + bus_name + "', '" + arrival_time + "', '" + type + "', '" + to + "')");
     }
 
     public ArrayList<String> getAllStops() {
@@ -76,5 +88,20 @@ public class Locations extends SQLiteOpenHelper {
     Cursor getBuses(String Place) {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * FROM " + Place, null);
+    }
+
+    public void clearAllTables() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                String tableName = cursor.getString(0);
+                if (!tableName.equals("android_metadata") && !tableName.equals("sqlite_sequence")) {
+                    db.execSQL("DROP TABLE IF EXISTS " + tableName);
+                }
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
     }
 }
