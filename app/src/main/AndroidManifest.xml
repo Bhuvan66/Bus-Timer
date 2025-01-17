@@ -21,9 +21,7 @@
         <activity
             android:name=".AddStop"
             android:exported="false" />
-        <activity
-            android:name=".AddBusActivity"
-            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -66,9 +66,14 @@ public class Locations extends SQLiteOpenHelper {
         }
     }
 
-    public void addBus(String Place, String bus_name, String arrival_time, String type, String to) {
+    public boolean addBus(String Place, String bus_name, String arrival_time, String type, String to) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("INSERT INTO " + Place + " (bus_name, arrival_time, type, `to`) VALUES ('" + bus_name + "', '" + arrival_time + "', '" + type + "', '" + to + "')");
+        try {
+            db.execSQL("INSERT INTO " + Place + " (bus_name, arrival_time, type, `to`) VALUES ('" + bus_name + "', '" + arrival_time + "', '" + type + "', '" + to + "')");
+            return true; // Insertion successful
+        } catch (Exception e) {
+            return false; // Insertion failed
+        }
     }
 
     public ArrayList<String> getAllStops() {

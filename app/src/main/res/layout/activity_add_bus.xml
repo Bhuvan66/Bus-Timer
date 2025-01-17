@@ -9,20 +9,19 @@
 
     <Spinner
         android:id="@+id/TableListSpinner"
-        android:layout_width="340dp"
+        android:layout_width="280dp"
         android:layout_height="40dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView7" />
+        app:layout_constraintTop_toTopOf="@+id/textView7" />
 
     <TextView
         android:id="@+id/textView7"
-        android:layout_width="wrap_content"
-        android:layout_height="19dp"
-        android:layout_marginTop="100dp"
-        android:text="Place bus Arrives"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="100dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="116dp"
+        android:text="From:"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -33,8 +32,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
+        android:hint="Bus Name"
         android:inputType="text"
-        android:text="Name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/TableListSpinner" />
 
@@ -45,6 +44,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
+        android:hint="HH:MM"
         android:inputType="time"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/BusTypeSpinner" />
@@ -65,8 +65,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:ems="10"
+        android:hint="To"
         android:inputType="text"
-        android:text="Name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ArivalTimeText" />
 
