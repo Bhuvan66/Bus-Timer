@@ -13,6 +13,12 @@
         android:theme="@style/Theme.AppCompat.DayNight"
         tools:targetApi="31">
         <activity
+            android:name=".AddBus"
+            android:exported="false" />
+        <activity
+            android:name=".AddstopNbus"
+            android:exported="false" />
+        <activity
             android:name=".AddStop"
             android:exported="false" />
         <activity

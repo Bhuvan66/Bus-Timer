@@ -46,7 +46,7 @@ RecyclerView recyclerView;
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, AddStop.class);
+                Intent intent = new Intent(MainActivity.this, AddstopNbus.class);
                 startActivity(intent);
             }
         });
