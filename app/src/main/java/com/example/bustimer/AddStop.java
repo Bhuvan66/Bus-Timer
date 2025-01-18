@@ -2,8 +2,10 @@ package com.example.bustimer;
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -22,7 +24,7 @@ import com.google.android.gms.location.LocationServices;
 
 public class AddStop extends AppCompatActivity {
 
-    Button addStop;
+    Button addStop,Maps;
     EditText Place, latLongText;
     CheckBox autoModeCheckBox;
     Locations locations;
@@ -41,6 +43,21 @@ public class AddStop extends AppCompatActivity {
         autoModeCheckBox = findViewById(R.id.autoModeCheckBox);
         locations = Locations.getInstance(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        Maps = findViewById(R.id.GetLocationLatNLong);
+
+        Maps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //send to google maps
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="));
+                intent.setPackage("com.google.android.apps.maps");
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(AddStop.this, "Google Maps is not installed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
