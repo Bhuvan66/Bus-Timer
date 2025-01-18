@@ -1,6 +1,6 @@
 # Bus Timer
  To do List
- *database Setup
+~~*database Setup~~
  *input output to database ui
  *gps integration
  *widget

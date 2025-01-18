@@ -1,5 +1,7 @@
 package com.example.bustimer;
 
+import android.content.pm.PackageManager;
+import android.Manifest;
 import android.os.Bundle;
 import android.provider.CallLog;
 import android.view.View;
@@ -9,15 +11,19 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.gms.maps.MapView;
 
 
 public class AddStop extends AppCompatActivity {
 Button addStop;
 EditText Place;
 Locations locations;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,6 +32,8 @@ Locations locations;
         Place = findViewById(R.id.StopText);
         addStop = findViewById(R.id.AddStopButton);
         locations = Locations.getInstance(this);
+
+
     addStop.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View view) {
