@@ -78,22 +78,26 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             tos.add("");
             //fetch data from table
             //display data in recycler view
-            Cursor cursor = locations.getBuses(tableName);
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    int busNameIndex = cursor.getColumnIndex("bus_name");
-                    int arrivalTimeIndex = cursor.getColumnIndex("arrival_time");
-                    int typeIndex = cursor.getColumnIndex("type");
-                    int toIndex = cursor.getColumnIndex("to");
+            FillRecycler(locations, tableName);
+        }
+    }
 
-                    if (busNameIndex != -1 && arrivalTimeIndex != -1 && typeIndex != -1 && toIndex != -1) {
-                        busNames.add(cursor.getString(busNameIndex));
-                        arrivalTimes.add(cursor.getString(arrivalTimeIndex));
-                        types.add(cursor.getString(typeIndex));
-                        tos.add(cursor.getString(toIndex));
-                    }
-                } while (cursor.moveToNext());
-            }
+    private void FillRecycler(Locations locations, String tableName) {
+        Cursor cursor = locations.getBuses(tableName);
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                int busNameIndex = cursor.getColumnIndex("bus_name");
+                int arrivalTimeIndex = cursor.getColumnIndex("arrival_time");
+                int typeIndex = cursor.getColumnIndex("type");
+                int toIndex = cursor.getColumnIndex("to");
+
+                if (busNameIndex != -1 && arrivalTimeIndex != -1 && typeIndex != -1 && toIndex != -1) {
+                    busNames.add(cursor.getString(busNameIndex));
+                    arrivalTimes.add(cursor.getString(arrivalTimeIndex));
+                    types.add(cursor.getString(typeIndex));
+                    tos.add(cursor.getString(toIndex));
+                }
+            } while (cursor.moveToNext());
         }
     }
 
