@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         tableNames = locations.getAllStops();
         if (tableNames.isEmpty()) {
             // Create tables and add dummy data
-            locations.CreateStopTable("karkala");
             tableNames = locations.getAllStops();
         }
         //display all data with table name
@@ -72,6 +71,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void LoadData(Locations locations) {
         tableNames = locations.getAllStops();
         for (String tableName : tableNames) {
+            //ignore generated table and take only user created tables
+            if (tableName.contains("sqlite_sequence") ||
+                    tableName.contains("android_metadata") ||
+                    tableName.contains("sqlite_stat") ||
+                    tableName.contains("locations")) {
+                continue;
+            }
             busNames.add("Table: " + tableName);
             arrivalTimes.add("");
             types.add("");

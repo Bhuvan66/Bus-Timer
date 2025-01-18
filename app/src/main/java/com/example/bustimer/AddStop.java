@@ -129,7 +129,7 @@ public class AddStop extends AppCompatActivity {
     }
 
     private void addStopToDatabase(double latitude, double longitude) {
-        boolean createdPlaceTable = locations.CreateStopTable(Place.getText().toString());
+        boolean createdPlaceTable = locations.CreateStopTable(Place.getText().toString(), latitude, longitude);
         if (createdPlaceTable) {
             Toast.makeText(AddStop.this, "Stop " + Place.getText().toString() + " Added at Latitude: " + latitude + ", Longitude: " + longitude, Toast.LENGTH_SHORT).show();
         } else {

@@ -30,11 +30,10 @@ public class Locations extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS locations");
         onCreate(db);
     }
 
-    public boolean CreateStopTable(String Place) {
+    public boolean CreateStopTable(String Place,double latitude,double longitude) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?", new String[]{Place});
         boolean tableExists = cursor.getCount() > 0;
@@ -51,6 +50,8 @@ public class Locations extends SQLiteOpenHelper {
                     "arrival_time TEXT, " +
                     "type TEXT, " +
                     "`to` TEXT)");
+            //Add the location to the locations table
+            db.execSQL("INSERT INTO locations (name, latitude, longitude) VALUES ('" + Place + "', " + latitude + ", " + longitude + ")");
 
 
             // Add 5 dummy rows for testing
