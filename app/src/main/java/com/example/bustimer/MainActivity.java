@@ -16,24 +16,28 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
-ArrayList<String> tableNames, busNames, arrivalTimes, types, tos;
-RecyclerView recyclerView;
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
+
+
+    ArrayList<String> tableNames, busNames, arrivalTimes, types, tos;
+    RecyclerView recyclerView;
+    CustomAdapter customAdapter;
+    SwipeRefreshLayout swipeRefreshLayout ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         Locations locations = Locations.getInstance(this);
-        CustomAdapter customAdapter;
-
-
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         //initialze arraylits
         busNames = new ArrayList<>();
         arrivalTimes = new ArrayList<>();
@@ -57,6 +61,16 @@ RecyclerView recyclerView;
             tableNames = locations.getAllStops();
         }
         //display all data with table name
+        LoadData(locations);
+
+        customAdapter = new CustomAdapter(this, busNames, arrivalTimes, types, tos);
+        recyclerView.setAdapter(customAdapter);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+    }
+
+    private void LoadData(Locations locations) {
+        tableNames = locations.getAllStops();
         for (String tableName : tableNames) {
             busNames.add("Table: " + tableName);
             arrivalTimes.add("");
@@ -81,10 +95,6 @@ RecyclerView recyclerView;
                 } while (cursor.moveToNext());
             }
         }
-
-        customAdapter = new CustomAdapter(this, busNames, arrivalTimes, types, tos);
-        recyclerView.setAdapter(customAdapter);
-
     }
 
     @Override
@@ -92,5 +102,20 @@ RecyclerView recyclerView;
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onRefresh() {
+        // Refresh data in recycler view
+        Locations locations = Locations.getInstance(this);
+        //empty arraylist
+        busNames.clear();
+        arrivalTimes.clear();
+        types.clear();
+        tos.clear();
+        LoadData(locations);
+        customAdapter.notifyDataSetChanged();
+        swipeRefreshLayout.setRefreshing(false);
+
     }
 }
