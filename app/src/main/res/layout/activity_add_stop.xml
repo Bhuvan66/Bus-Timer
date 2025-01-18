@@ -8,6 +8,19 @@
     tools:context="AddStop">
 
     <TextView
+        android:id="@+id/LocationTextViews"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:text="Location:"
+        android:visibility="visible"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.048"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/AddStop" />
+
+    <TextView
         android:id="@+id/AddStop"
         android:layout_width="202dp"
         android:layout_height="50dp"
@@ -19,54 +32,57 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/StopText"
+    <TextView
+        android:id="@+id/textView5"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Stop Name:"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.045"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/AddStop" />
+
+    <EditText
+        android:id="@+id/StopText"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:ems="10"
         android:hint="Place/Stop_Name"
         android:inputType="text"
         android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5" />
+        app:layout_constraintTop_toBottomOf="@+id/AddStop" />
 
-    <RadioGroup
-        android:id="@+id/modeGroup"
+    <CheckBox
+        android:id="@+id/autoModeCheckBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="80dp"
+        android:text="Use Current Location As Stop"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.507"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/StopText">
-
-        <RadioButton
-            android:id="@+id/manualMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manual" />
-
-        <RadioButton
-            android:id="@+id/autoMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Automatic" />
-    </RadioGroup>
+        app:layout_constraintTop_toBottomOf="@+id/StopText" />
 
     <EditText
         android:id="@+id/latLongText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
         android:layout_marginTop="16dp"
         android:ems="10"
         android:hint="Latitude, Longitude"
         android:inputType="text"
         android:textAlignment="center"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/modeGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/StopText" />
 
     <Button
         android:id="@+id/AddStopButton"
@@ -76,16 +92,6 @@
         android:text="Add Stop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/latLongText" />
-
-    <TextView
-        android:id="@+id/textView5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Select Stop Location"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/AddStop" />
+        app:layout_constraintTop_toBottomOf="@+id/autoModeCheckBox" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
