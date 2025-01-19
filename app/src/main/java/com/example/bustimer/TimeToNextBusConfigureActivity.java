@@ -9,41 +9,51 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.RemoteViews;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.AdapterView;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bustimer.databinding.TimeToNextBusConfigureBinding;
-import com.example.bustimer.ToPlaceAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * The configuration screen for the {@link TimeToNextBus TimeToNextBus} AppWidget.
- */
 public class TimeToNextBusConfigureActivity extends Activity {
-    Switch StaticSwitch;
-    TextView To, From;
-    Spinner FromSpinner;
+    Switch DynamicSwitch;
+    TextView To, From, Type;
+    Spinner FromSpinner, TypeSpinner;
     RecyclerView TorecyclerView;
     Button AddWidget;
     Locations locations;
     private static final String PREFS_NAME = "com.example.bustimer.TimeToNextBus";
     private static final String PREF_PREFIX_KEY = "appwidget_";
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
+    ToPlaceAdapter toPlaceAdapter;
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = TimeToNextBusConfigureActivity.this;
 
-            // It is the responsibility of the configuration activity to update the app widget
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-            TimeToNextBus.updateAppWidget(context, appWidgetManager, mAppWidgetId);
+            String from = FromSpinner.getSelectedItem().toString();
+            String type = TypeSpinner.getSelectedItem().toString();
+            List<String> checkedTos = toPlaceAdapter.getCheckedItems();
 
-            // Make sure we pass back the original appWidgetId
+            if (checkedTos.isEmpty()) {
+                Toast.makeText(context, "Please select at least one 'To' location", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String to = String.join(",", checkedTos);
+
+            saveWidgetDetails(mAppWidgetId, from, to, type);
+
+            updateWidget(context, mAppWidgetId);
+
             Intent resultValue = new Intent();
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
             setResult(RESULT_OK, resultValue);
@@ -56,15 +66,12 @@ public class TimeToNextBusConfigureActivity extends Activity {
         super();
     }
 
-    // Write the prefix to the SharedPreferences object for this widget
     static void saveTitlePref(Context context, int appWidgetId, String text) {
         SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
         prefs.putString(PREF_PREFIX_KEY + appWidgetId, text);
         prefs.apply();
     }
 
-    // Read the prefix from the SharedPreferences object for this widget.
-    // If there is no preference saved, get the default from a resource
     static String loadTitlePref(Context context, int appWidgetId) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
         String titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null);
@@ -81,60 +88,137 @@ public class TimeToNextBusConfigureActivity extends Activity {
         prefs.apply();
     }
 
+    public static String getPrefsName() {
+        return PREFS_NAME;
+    }
+
+    public static String getPrefPrefixKey() {
+        return PREF_PREFIX_KEY;
+    }
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        // Set the result to CANCELED. This will cause the widget host to cancel
-        // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
 
         binding = TimeToNextBusConfigureBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Find the widget id from the intent.
+        From = findViewById(R.id.FromTextView);
+        To = findViewById(R.id.ToTextView);
+        DynamicSwitch = findViewById(R.id.DynamicSwitch);
+        Type = findViewById(R.id.TypeTextView);
+        AddWidget = findViewById(R.id.AddWidgetButton);
+        TypeSpinner = findViewById(R.id.TypeSpinner);
+        FromSpinner = findViewById(R.id.FromSpinner);
+        TorecyclerView = findViewById(R.id.TorecyclerView);
+
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if (extras != null) {
-            mAppWidgetId = extras.getInt(
-                    AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
-        // If this activity was started with an intent without an app widget ID, finish with an error.
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish();
             return;
         }
 
-        // Initialize the Locations instance
         locations = Locations.getInstance(this);
 
-        // Get the list of stops
         ArrayList<String> stops = locations.getAllStops();
 
-        // Populate the Spinner
-        FromSpinner = findViewById(R.id.FromSpinner);
+        ArrayAdapter<CharSequence> adapter1 = ArrayAdapter.createFromResource(this, R.array.types, android.R.layout.simple_spinner_item);
+        adapter1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        TypeSpinner.setAdapter(adapter1);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, stops);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         FromSpinner.setAdapter(adapter);
 
-        // Set up the RecyclerView
-        TorecyclerView = findViewById(R.id.TorecyclerView);
         TorecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        // Add listener to FromSpinner to update TorecyclerView based on selected place
+
+        // Set an empty adapter initially to avoid the "No adapter attached" error
+        toPlaceAdapter = new ToPlaceAdapter(this, new ArrayList<>());
+        TorecyclerView.setAdapter(toPlaceAdapter);
+
         FromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedPlace = stops.get(position);
                 ArrayList<String> uniqueToEntries = locations.getUniqueToEntries(selectedPlace);
-                ToPlaceAdapter toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, uniqueToEntries);
+                toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, uniqueToEntries);
                 TorecyclerView.setAdapter(toPlaceAdapter);
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // Do nothing
             }
         });
+
+        DynamicSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                From.setVisibility(View.GONE);
+                FromSpinner.setVisibility(View.GONE);
+                animateComponentsUp();
+                ArrayList<String> allUniqueToEntries = locations.getAllUniqueToEntries();
+                toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, allUniqueToEntries);
+                TorecyclerView.setAdapter(toPlaceAdapter);
+            } else {
+                From.setVisibility(View.VISIBLE);
+                FromSpinner.setVisibility(View.VISIBLE);
+                animateComponentsDown();
+                String selectedPlace = (String) FromSpinner.getSelectedItem();
+                if (selectedPlace != null) {
+                    ArrayList<String> uniqueToEntries = locations.getUniqueToEntries(selectedPlace);
+                    toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, uniqueToEntries);
+                    TorecyclerView.setAdapter(toPlaceAdapter);
+                }
+            }
+        });
+
+        AddWidget.setOnClickListener(mOnClickListener);
+    }
+    private void animateComponentsUp() {
+        To.animate().translationYBy(-From.getHeight()).setDuration(300).start();
+        Type.animate().translationYBy(-From.getHeight()).setDuration(300).start();
+        TypeSpinner.animate().translationYBy(-From.getHeight()).setDuration(300).start();
+        TorecyclerView.animate().translationYBy(-From.getHeight()).setDuration(300).start();
+        AddWidget.animate().translationYBy(-From.getHeight()).setDuration(300).start();
+    }
+
+    private void animateComponentsDown() {
+        To.animate().translationYBy(From.getHeight()).setDuration(300).start();
+        Type.animate().translationYBy(From.getHeight()).setDuration(300).start();
+        TypeSpinner.animate().translationYBy(From.getHeight()).setDuration(300).start();
+        TorecyclerView.animate().translationYBy(From.getHeight()).setDuration(300).start();
+        AddWidget.animate().translationYBy(From.getHeight()).setDuration(300).start();
+    }
+
+    private void saveWidgetDetails(int appWidgetId, String from, String to, String type) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(PREF_PREFIX_KEY + appWidgetId + "_from", from);
+        editor.putString(PREF_PREFIX_KEY + appWidgetId + "_to", to);
+        editor.putString(PREF_PREFIX_KEY + appWidgetId + "_type", type);
+        editor.apply();
+    }
+
+    private void updateWidget(Context context, int appWidgetId) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.time_to_next_bus);
+
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String from = prefs.getString(PREF_PREFIX_KEY + appWidgetId + "_from", "Default From");
+        String to = prefs.getString(PREF_PREFIX_KEY + appWidgetId + "_to", "Default To");
+        String type = prefs.getString(PREF_PREFIX_KEY + appWidgetId + "_type", "Default Type");
+
+        Locations locations = Locations.getInstance(context);
+        String nextBus = locations.getNextAvailableBus(from, to, type);
+
+        views.setTextViewText(R.id.appwidget_text, nextBus);
+
+        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 }

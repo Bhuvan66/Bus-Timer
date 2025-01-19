@@ -1,39 +1,52 @@
+// TimeToNextBus.java
 package com.example.bustimer;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.widget.RemoteViews;
 
-/**
- * Implementation of App Widget functionality.
- * App Widget Configuration implemented in {@link TimeToNextBusConfigureActivity TimeToNextBusConfigureActivity}
- */
+import java.util.ArrayList;
+
 public class TimeToNextBus extends AppWidgetProvider {
 
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-                                int appWidgetId) {
+    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        SharedPreferences prefs = context.getSharedPreferences(TimeToNextBusConfigureActivity.getPrefsName(), Context.MODE_PRIVATE);
+        String from = prefs.getString(TimeToNextBusConfigureActivity.getPrefPrefixKey() + appWidgetId + "_from", null);
+        String to = prefs.getString(TimeToNextBusConfigureActivity.getPrefPrefixKey() + appWidgetId + "_to", null);
+        String type = prefs.getString(TimeToNextBusConfigureActivity.getPrefPrefixKey() + appWidgetId + "_type", null);
 
-        CharSequence widgetText = TimeToNextBusConfigureActivity.loadTitlePref(context, appWidgetId);
-        // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.time_to_next_bus);
-        views.setTextViewText(R.id.appwidget_text, widgetText);
 
-        // Instruct the widget manager to update the widget
+        if (from == null || to == null || type == null) {
+            views.setTextViewText(R.id.appwidget_text, "Error: Missing configuration");
+        } else {
+            Locations locations = Locations.getInstance(context);
+            ArrayList<String> validPlaces = locations.getAllStops();
+
+            if (!validPlaces.contains(from)) {
+                from = validPlaces.isEmpty() ? "" : validPlaces.get(0);
+            }
+
+            String nextBus = locations.getNextAvailableBus(from, to, type);
+            views.setTextViewText(R.id.appwidget_text, nextBus);
+        }
+
+        Intent intent = new Intent(context, TimeToNextBusConfigureActivity.class);
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        views.setOnClickPendingIntent(R.id.appwidget_text, pendingIntent);
+
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
     @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        // There may be multiple widgets active, so update all of them
-        for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId);
-        }
-    }
-
-    @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
-        // When the user deletes the widget, delete the preference associated with it.
         for (int appWidgetId : appWidgetIds) {
             TimeToNextBusConfigureActivity.deleteTitlePref(context, appWidgetId);
         }
@@ -41,11 +54,9 @@ public class TimeToNextBus extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
-        // Enter relevant functionality for when the first widget is created
     }
 
     @Override
     public void onDisabled(Context context) {
-        // Enter relevant functionality for when the last widget is disabled
     }
 }

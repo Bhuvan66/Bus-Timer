@@ -6,8 +6,11 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class Locations extends SQLiteOpenHelper {
     private static Locations instance;
@@ -33,7 +36,7 @@ public class Locations extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean CreateStopTable(String Place,double latitude,double longitude) {
+    public boolean CreateStopTable(String Place, double latitude, double longitude) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?", new String[]{Place});
         boolean tableExists = cursor.getCount() > 0;
@@ -50,9 +53,8 @@ public class Locations extends SQLiteOpenHelper {
                     "arrival_time TEXT, " +
                     "type TEXT, " +
                     "`to` TEXT)");
-            //Add the location to the locations table
+            // Add the location to the locations table
             db.execSQL("INSERT INTO locations (name, latitude, longitude) VALUES ('" + Place + "', " + latitude + ", " + longitude + ")");
-
 
             // Add 5 dummy rows for testing
             addBus(Place, "Bus 1", "10:00", "AC", "To");
@@ -62,7 +64,6 @@ public class Locations extends SQLiteOpenHelper {
 
             return true;
         } catch (Exception e) {
-
             return false;
         }
     }
@@ -123,5 +124,51 @@ public class Locations extends SQLiteOpenHelper {
         }
         cursor.close();
         return toEntries;
+    }
+
+    public ArrayList<String> getAllUniqueToEntries() {
+        ArrayList<String> allUniqueToEntries = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT name FROM locations", null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                String place = cursor.getString(0);
+                Cursor toCursor = db.rawQuery("SELECT DISTINCT `to` FROM `" + place + "`", null);
+                if (toCursor.moveToFirst()) {
+                    while (!toCursor.isAfterLast()) {
+                        String toEntry = toCursor.getString(0);
+                        if (!allUniqueToEntries.contains(toEntry)) {
+                            allUniqueToEntries.add(toEntry);
+                        }
+                        toCursor.moveToNext();
+                    }
+                }
+                toCursor.close();
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        return allUniqueToEntries;
+    }
+
+    public String getNextAvailableBus(String from, String to, String type) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+        Cursor cursor = db.rawQuery("SELECT * FROM `" + from + "` WHERE `to` = ? AND type = ? AND arrival_time > ? ORDER BY arrival_time ASC LIMIT 1", new String[]{to, type, currentTime});
+        String nextBus = "No available buses";
+
+        if (cursor.moveToFirst()) {
+            int busNameIndex = cursor.getColumnIndex("bus_name");
+            int arrivalTimeIndex = cursor.getColumnIndex("arrival_time");
+
+            if (busNameIndex != -1 && arrivalTimeIndex != -1) {
+                String busName = cursor.getString(busNameIndex);
+                String arrivalTime = cursor.getString(arrivalTimeIndex);
+                nextBus = busName + " at " + arrivalTime;
+            }
+        }
+
+        cursor.close();
+        return nextBus;
     }
 }
