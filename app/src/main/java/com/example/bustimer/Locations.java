@@ -80,7 +80,7 @@ public class Locations extends SQLiteOpenHelper {
     public ArrayList<String> getAllStops() {
         ArrayList<String> tableNames = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        Cursor cursor = db.rawQuery("SELECT name FROM locations", null);
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
                 tableNames.add(cursor.getString(0));
@@ -109,5 +109,19 @@ public class Locations extends SQLiteOpenHelper {
             }
         }
         cursor.close();
+    }
+
+    public ArrayList<String> getUniqueToEntries(String place) {
+        ArrayList<String> toEntries = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT `to` FROM " + place, null);
+        if (cursor.moveToFirst()) {
+            while (!cursor.isAfterLast()) {
+                toEntries.add(cursor.getString(0));
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
+        return toEntries;
     }
 }

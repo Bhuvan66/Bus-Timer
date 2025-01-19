@@ -7,26 +7,37 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.AdapterView;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.bustimer.databinding.TimeToNextBusConfigureBinding;
+import com.example.bustimer.ToPlaceAdapter;
+
+import java.util.ArrayList;
 
 /**
  * The configuration screen for the {@link TimeToNextBus TimeToNextBus} AppWidget.
  */
 public class TimeToNextBusConfigureActivity extends Activity {
-
+    Switch StaticSwitch;
+    TextView To, From;
+    Spinner FromSpinner;
+    RecyclerView TorecyclerView;
+    Button AddWidget;
+    Locations locations;
     private static final String PREFS_NAME = "com.example.bustimer.TimeToNextBus";
     private static final String PREF_PREFIX_KEY = "appwidget_";
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
-    EditText mAppWidgetText;
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
         public void onClick(View v) {
             final Context context = TimeToNextBusConfigureActivity.this;
-
-            // When the button is clicked, store the string locally
-            String widgetText = mAppWidgetText.getText().toString();
-            saveTitlePref(context, mAppWidgetId, widgetText);
 
             // It is the responsibility of the configuration activity to update the app widget
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
@@ -74,15 +85,12 @@ public class TimeToNextBusConfigureActivity extends Activity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        // Set the result to CANCELED.  This will cause the widget host to cancel
+        // Set the result to CANCELED. This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
         setResult(RESULT_CANCELED);
 
         binding = TimeToNextBusConfigureBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        mAppWidgetText = binding.appwidgetText;
-        binding.addButton.setOnClickListener(mOnClickListener);
 
         // Find the widget id from the intent.
         Intent intent = getIntent();
@@ -98,6 +106,35 @@ public class TimeToNextBusConfigureActivity extends Activity {
             return;
         }
 
-        mAppWidgetText.setText(loadTitlePref(TimeToNextBusConfigureActivity.this, mAppWidgetId));
+        // Initialize the Locations instance
+        locations = Locations.getInstance(this);
+
+        // Get the list of stops
+        ArrayList<String> stops = locations.getAllStops();
+
+        // Populate the Spinner
+        FromSpinner = findViewById(R.id.FromSpinner);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, stops);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        FromSpinner.setAdapter(adapter);
+
+        // Set up the RecyclerView
+        TorecyclerView = findViewById(R.id.TorecyclerView);
+        TorecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // Add listener to FromSpinner to update TorecyclerView based on selected place
+        FromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedPlace = stops.get(position);
+                ArrayList<String> uniqueToEntries = locations.getUniqueToEntries(selectedPlace);
+                ToPlaceAdapter toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, uniqueToEntries);
+                TorecyclerView.setAdapter(toPlaceAdapter);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
     }
 }
