@@ -1,10 +1,14 @@
 package com.example.bustimer;
 
+import android.Manifest;
 import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -16,6 +20,7 @@ import android.widget.TextView;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -162,9 +167,29 @@ public class TimeToNextBusConfigureActivity extends Activity {
                 From.setVisibility(View.GONE);
                 FromSpinner.setVisibility(View.GONE);
                 animateComponentsUp();
-                ArrayList<String> allUniqueToEntries = locations.getAllUniqueToEntries();
-                toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, allUniqueToEntries);
-                TorecyclerView.setAdapter(toPlaceAdapter);
+
+                // Get the current location
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+                    return;
+                }
+
+                Location currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                if (currentLocation != null) {
+                    double currentLatitude = currentLocation.getLatitude();
+                    double currentLongitude = currentLocation.getLongitude();
+
+                    // Find the nearest bus stop
+                    String nearestStop = locations.getNearestStop(currentLatitude, currentLongitude);
+                    ArrayList<String> uniqueToEntries = locations.getAllUniqueToEntries();
+                    toPlaceAdapter = new ToPlaceAdapter(TimeToNextBusConfigureActivity.this, uniqueToEntries);
+                    TorecyclerView.setAdapter(toPlaceAdapter);
+                } else {
+                    Toast.makeText(this, "Unable to get current location", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 From.setVisibility(View.VISIBLE);
                 FromSpinner.setVisibility(View.VISIBLE);

@@ -4,41 +4,33 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
-
-
+    private static final String TAG = "MainActivity";
     ArrayList<String> tableNames, busNames, arrivalTimes, types, tos;
     RecyclerView recyclerView;
     CustomAdapter customAdapter;
-    SwipeRefreshLayout swipeRefreshLayout ;
+    SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        Locations locations = Locations.getInstance(this);
+
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        //initialze arraylits
+
+        // Initialize array lists
         busNames = new ArrayList<>();
         arrivalTimes = new ArrayList<>();
         types = new ArrayList<>();
@@ -47,31 +39,30 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
 
         FloatingActionButton fab = findViewById(R.id.floatingActionButton);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, AddstopNbus.class);
-                startActivity(intent);
-            }
+        fab.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, AddstopNbus.class);
+            startActivity(intent);
         });
+
+        Locations locations = Locations.getInstance(this);
+        locations.getWritableDatabase();
         tableNames = locations.getAllStops();
         if (tableNames.isEmpty()) {
             // Create tables and add dummy data
             tableNames = locations.getAllStops();
         }
-        //display all data with table name
+        // Display all data with table name
         LoadData(locations);
 
         customAdapter = new CustomAdapter(this, busNames, arrivalTimes, types, tos);
         recyclerView.setAdapter(customAdapter);
         swipeRefreshLayout.setOnRefreshListener(this);
-
     }
 
     private void LoadData(Locations locations) {
         tableNames = locations.getAllStops();
         for (String tableName : tableNames) {
-            //ignore generated table and take only user created tables
+            // Ignore generated table and take only user-created tables
             if (tableName.contains("sqlite_sequence") ||
                     tableName.contains("android_metadata") ||
                     tableName.contains("sqlite_stat") ||
@@ -82,8 +73,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             arrivalTimes.add("");
             types.add("");
             tos.add("");
-            //fetch data from table
-            //display data in recycler view
+            // Fetch data from table and display in recycler view
             FillRecycler(locations, tableName);
         }
     }
@@ -118,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public void onRefresh() {
         // Refresh data in recycler view
         Locations locations = Locations.getInstance(this);
-        //empty arraylist
+        // Empty array lists
         busNames.clear();
         arrivalTimes.clear();
         types.clear();
@@ -126,6 +116,5 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         LoadData(locations);
         customAdapter.notifyDataSetChanged();
         swipeRefreshLayout.setRefreshing(false);
-
     }
 }

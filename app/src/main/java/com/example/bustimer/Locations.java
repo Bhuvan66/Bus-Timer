@@ -15,27 +15,40 @@ import java.util.Locale;
 public class Locations extends SQLiteOpenHelper {
     private static Locations instance;
 
-    private Locations(Context context) {
+    public Locations(Context context) {
         super(context, "locations.db", null, 1);
     }
 
     public static synchronized Locations getInstance(Context context) {
         if (instance == null) {
             instance = new Locations(context.getApplicationContext());
+            SQLiteDatabase db = instance.getWritableDatabase(); // Ensure the database is created
+            instance.checkAndCreateTable(db); // Check and create the table if it does not exist
         }
         return instance;
     }
 
+    private void checkAndCreateTable(SQLiteDatabase db) {
+        Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='locations'", null);
+        if (cursor.getCount() == 0) {
+            onCreate(db);
+        }
+        cursor.close();
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE locations (id INTEGER PRIMARY KEY, name TEXT, latitude REAL, longitude REAL)");
+        try {
+            db.execSQL("CREATE TABLE IF NOT EXISTS locations (id INTEGER PRIMARY KEY, name TEXT, latitude REAL, longitude REAL)");
+        } catch (Exception e) {
+            Log.e("Locations", "Error creating table: " + e.getMessage());
+        }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        onCreate(db);
+        db.execSQL("CREATE TABLE IF NOT EXISTS locations (id INTEGER PRIMARY KEY, name TEXT, latitude REAL, longitude REAL)");
     }
-
     public boolean CreateStopTable(String Place, double latitude, double longitude) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?", new String[]{Place});
@@ -81,14 +94,22 @@ public class Locations extends SQLiteOpenHelper {
     public ArrayList<String> getAllStops() {
         ArrayList<String> tableNames = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT name FROM locations", null);
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                tableNames.add(cursor.getString(0));
-                cursor.moveToNext();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("SELECT name FROM locations", null);
+            if (cursor.moveToFirst()) {
+                while (!cursor.isAfterLast()) {
+                    tableNames.add(cursor.getString(0));
+                    cursor.moveToNext();
+                }
+            }
+        } catch (Exception e) {
+            Log.e("Locations", "Error fetching stops: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
-        cursor.close();
         return tableNames;
     }
 
@@ -170,5 +191,45 @@ public class Locations extends SQLiteOpenHelper {
 
         cursor.close();
         return nextBus;
+    }
+
+    public String getNearestStop(double latitude, double longitude) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT name, latitude, longitude FROM locations", null);
+        String nearestStop = "No stops available";
+        double minDistance = Double.MAX_VALUE;
+
+        if (cursor.moveToFirst()) {
+            int latitudeIndex = cursor.getColumnIndex("latitude");
+            int longitudeIndex = cursor.getColumnIndex("longitude");
+            int nameIndex = cursor.getColumnIndex("name");
+
+            if (latitudeIndex != -1 && longitudeIndex != -1 && nameIndex != -1) {
+                while (!cursor.isAfterLast()) {
+                    double stopLatitude = cursor.getDouble(latitudeIndex);
+                    double stopLongitude = cursor.getDouble(longitudeIndex);
+                    double distance = calculateDistance(latitude, longitude, stopLatitude, stopLongitude);
+
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestStop = cursor.getString(nameIndex);
+                    }
+                    cursor.moveToNext();
+                }
+            }
+        }
+        cursor.close();
+        return nearestStop;
+    }
+
+    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Radius of the earth in km
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
     }
 }
