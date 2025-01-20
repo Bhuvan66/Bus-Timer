@@ -15,8 +15,6 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
-import java.util.ArrayList;
-
 public class TimeToNextBus extends AppWidgetProvider {
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
@@ -48,7 +46,11 @@ public class TimeToNextBus extends AppWidgetProvider {
                 String type = prefs.getString(TimeToNextBusConfigureActivity.getPrefPrefixKey() + appWidgetId + "_type", "Default Type");
 
                 String nextBus = locations.getNextAvailableBus(nearestStop, to, type);
-                views.setTextViewText(R.id.appwidget_text, nextBus);
+                if (!nextBus.equals("No available buses")) {
+                    views.setTextViewText(R.id.appwidget_text, nextBus);
+                } else {
+                    views.setTextViewText(R.id.appwidget_text, "No available buses");
+                }
             } else {
                 views.setTextViewText(R.id.appwidget_text, "Unable to get current location");
             }
@@ -59,7 +61,11 @@ public class TimeToNextBus extends AppWidgetProvider {
 
             Locations locations = Locations.getInstance(context);
             String nextBus = locations.getNextAvailableBus(from, to, type);
-            views.setTextViewText(R.id.appwidget_text, nextBus);
+            if (!nextBus.equals("No available buses")) {
+                views.setTextViewText(R.id.appwidget_text, nextBus);
+            } else {
+                views.setTextViewText(R.id.appwidget_text, "No available buses");
+            }
         }
 
         Intent intent = new Intent(context, TimeToNextBusConfigureActivity.class);

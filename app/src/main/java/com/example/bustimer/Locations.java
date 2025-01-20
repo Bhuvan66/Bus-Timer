@@ -49,6 +49,7 @@ public class Locations extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("CREATE TABLE IF NOT EXISTS locations (id INTEGER PRIMARY KEY, name TEXT, latitude REAL, longitude REAL)");
     }
+
     public boolean CreateStopTable(String Place, double latitude, double longitude) {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name=?", new String[]{Place});
@@ -83,6 +84,24 @@ public class Locations extends SQLiteOpenHelper {
 
     public boolean addBus(String Place, String bus_name, String arrival_time, String type, String to) {
         SQLiteDatabase db = this.getWritableDatabase();
+        // Check if the bus already exists
+        Cursor cursor = db.rawQuery("SELECT * FROM " + Place + " WHERE bus_name = ? AND arrival_time = ? AND type = ? AND `to` = ?", new String[]{bus_name, arrival_time, type, to});
+        if (cursor.getCount() > 0) {
+            cursor.close();
+            return false; // Bus already exists
+        }
+        cursor.close();
+
+        //check if arrival time is in correct format
+        if (!arrival_time.matches("([01]?[0-9]|2[0-3]):[0-5][0-9]")) {
+            return false; // Invalid arrival time
+        }
+
+        //Check if type is Express or Local
+        if (!type.equals("Express") && !type.equals("Local")) {
+            return false; // Invalid type
+        }
+
         try {
             db.execSQL("INSERT INTO " + Place + " (bus_name, arrival_time, type, `to`) VALUES ('" + bus_name + "', '" + arrival_time + "', '" + type + "', '" + to + "')");
             return true; // Insertion successful
@@ -175,7 +194,31 @@ public class Locations extends SQLiteOpenHelper {
     public String getNextAvailableBus(String from, String to, String type) {
         SQLiteDatabase db = this.getReadableDatabase();
         String currentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        Cursor cursor = db.rawQuery("SELECT * FROM `" + from + "` WHERE `to` = ? AND type = ? AND arrival_time > ? ORDER BY arrival_time ASC LIMIT 1", new String[]{to, type, currentTime});
+        Log.e("Locations", "Fetching next available bus from: " + from + ", to: " + to + ", type: " + type + ", current time: " + currentTime);
+
+        // Split the `to` parameter into individual destinations
+        String[] destinations = to.split(",");
+        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM `").append(from).append("` WHERE type = ? AND strftime('%H:%M', arrival_time) > ? AND (");
+
+        // Construct the query to check for any of the destinations
+        for (int i = 0; i < destinations.length; i++) {
+            queryBuilder.append("`to` = ?");
+            if (i < destinations.length - 1) {
+                queryBuilder.append(" OR ");
+            }
+        }
+        queryBuilder.append(") ORDER BY strftime('%H:%M', arrival_time) ASC LIMIT 1");
+
+        String query = queryBuilder.toString();
+        Log.e("Locations", "Query: " + query);
+
+        // Prepare the arguments for the query
+        String[] args = new String[2 + destinations.length];
+        args[0] = type;
+        args[1] = currentTime;
+        System.arraycopy(destinations, 0, args, 2, destinations.length);
+
+        Cursor cursor = db.rawQuery(query, args);
         String nextBus = "No available buses";
 
         if (cursor.moveToFirst()) {
@@ -186,7 +229,10 @@ public class Locations extends SQLiteOpenHelper {
                 String busName = cursor.getString(busNameIndex);
                 String arrivalTime = cursor.getString(arrivalTimeIndex);
                 nextBus = busName + " at " + arrivalTime;
+                Log.e("Locations", "Next available bus: " + nextBus);
             }
+        } else {
+            Log.e("Locations", "No available buses found");
         }
 
         cursor.close();
