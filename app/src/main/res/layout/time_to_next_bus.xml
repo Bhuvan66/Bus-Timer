@@ -1,7 +1,9 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Widget.BusTimer.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/transparent"
     android:theme="@style/Theme.AppCompat.DayNight.AppWidgetContainer">
 
     <TextView
@@ -15,5 +17,7 @@
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
         android:textSize="24sp"
-        android:textStyle="bold|italic" />
+        android:textStyle="bold|italic"
+        android:textColor="@android:color/white"
+        android:background="@android:color/transparent" />
 </RelativeLayout>

@@ -26,6 +26,12 @@
                 android:resource="@xml/time_to_next_bus_info" />
         </receiver>
 
+        <receiver android:name=".UpdateWidgetReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name=".TimeToNextBusConfigureActivity"
             android:exported="false">

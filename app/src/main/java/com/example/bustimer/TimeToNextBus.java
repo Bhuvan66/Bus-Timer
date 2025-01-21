@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 
+import com.example.bustimer.UpdateWidgetReceiver;
+
 public class TimeToNextBus extends AppWidgetProvider {
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
@@ -87,9 +89,11 @@ public class TimeToNextBus extends AppWidgetProvider {
 
     @Override
     public void onEnabled(Context context) {
+        UpdateWidgetReceiver.setUpdateAlarm(context);
     }
 
     @Override
     public void onDisabled(Context context) {
+        UpdateWidgetReceiver.cancelUpdateAlarm(context);
     }
 }
