@@ -9,3 +9,4 @@
  *widget ui
  *database dublicates handling
  *ui/ux upgrades
+ *the any bus is not working in wiget config
