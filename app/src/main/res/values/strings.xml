@@ -4,6 +4,8 @@
     <string name="configure">Configure</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
+    <string name="countdown_format">Countdown: %1$d min %2$d sec</string>
+    <string name="bus_arrived">Bus has arrived</string>
     <string-array name="types">
         <item>Local</item>
         <item>Express</item>
