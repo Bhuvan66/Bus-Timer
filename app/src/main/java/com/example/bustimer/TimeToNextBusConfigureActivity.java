@@ -205,6 +205,7 @@ public class TimeToNextBusConfigureActivity extends Activity {
 
         AddWidget.setOnClickListener(mOnClickListener);
     }
+
     private void animateComponentsUp() {
         To.animate().translationYBy(-From.getHeight()).setDuration(300).start();
         Type.animate().translationYBy(-From.getHeight()).setDuration(300).start();
