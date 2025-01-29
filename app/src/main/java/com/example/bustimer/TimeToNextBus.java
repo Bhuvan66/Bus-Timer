@@ -98,6 +98,8 @@ public class TimeToNextBus extends AppWidgetProvider {
                         public void onFinish() {
                             views.setTextViewText(R.id.Countdown, context.getString(R.string.bus_arrived));
                             appWidgetManager.updateAppWidget(appWidgetId, views);
+                            // Fetch the next bus
+                            updateAppWidget(context, appWidgetManager, appWidgetId);
                         }
                     }.start();
 
@@ -116,7 +118,6 @@ public class TimeToNextBus extends AppWidgetProvider {
 
         // Ensure an immediate update after setting countdown
         appWidgetManager.updateAppWidget(appWidgetId, views);
-
 
         Intent intent = new Intent(context, TimeToNextBusConfigureActivity.class);
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
